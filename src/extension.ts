@@ -1,72 +1,121 @@
 import * as vscode from "vscode";
 
-const TERMINAL_NAME = "opencode";
+const OPENCODE_TERMINAL_NAME = "opencode";
+const PI_BOLT_TERMINAL_NAME = "pi-bolt";
+
+interface AgentTerminalConfig {
+  id: string;
+  terminalName: string;
+  defaultCommand: string;
+  configSection: string;
+  iconPath: vscode.TerminalOptions["iconPath"];
+  callerEnvVar: string;
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  // Command: Open or reveal existing OpenCode terminal in editor area
-  const openTerminalCmd = vscode.commands.registerCommand(
-    "opencode.openTerminal",
+  const opencodeAgent: AgentTerminalConfig = {
+    id: "opencode",
+    terminalName: OPENCODE_TERMINAL_NAME,
+    defaultCommand: "opencode2",
+    configSection: "opencode",
+    iconPath: {
+      light: vscode.Uri.file(context.asAbsolutePath("images/button-light.svg")),
+      dark: vscode.Uri.file(context.asAbsolutePath("images/button-dark.svg")),
+    },
+    callerEnvVar: "OPENCODE_CALLER",
+  };
+
+  const piBoltAgent: AgentTerminalConfig = {
+    id: "pibolt",
+    terminalName: PI_BOLT_TERMINAL_NAME,
+    defaultCommand: "pi-bolt",
+    configSection: "pibolt",
+    iconPath: new vscode.ThemeIcon("zap"),
+    callerEnvVar: "PI_BOLT_CALLER",
+  };
+
+  // Register commands for OpenCode and Pi-Bolt
+  registerAgentCommands(context, opencodeAgent);
+  registerAgentCommands(context, piBoltAgent);
+
+  // Status Bar Item: OpenCode quick launch (Right, priority 100)
+  const openCodeStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100
+  );
+  openCodeStatusBarItem.command = "opencode.openTerminal";
+  openCodeStatusBarItem.text = "$(terminal) OpenCode";
+  openCodeStatusBarItem.tooltip = "Open OpenCode Terminal (Ctrl+Escape)";
+  openCodeStatusBarItem.show();
+
+  // Status Bar Item: Pi-Bolt quick launch (Right, priority 99)
+  const piBoltStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    99
+  );
+  piBoltStatusBarItem.command = "pibolt.openTerminal";
+  piBoltStatusBarItem.text = "$(zap) Pi-Bolt";
+  piBoltStatusBarItem.tooltip = "Open Pi-Bolt Terminal (Ctrl+Alt+B)";
+  piBoltStatusBarItem.show();
+
+  context.subscriptions.push(openCodeStatusBarItem, piBoltStatusBarItem);
+}
+
+export function deactivate() {}
+
+function registerAgentCommands(
+  context: vscode.ExtensionContext,
+  agent: AgentTerminalConfig
+) {
+  // Command: Open or reveal existing terminal tab
+  const openCmd = vscode.commands.registerCommand(
+    `${agent.id}.openTerminal`,
     async () => {
       const existing = vscode.window.terminals.find(
-        (t) => t.name === TERMINAL_NAME
+        (t) => t.name === agent.terminalName
       );
       if (existing) {
         existing.show();
         return;
       }
-      await launchOpenCodeTerminal(context);
+      await launchTerminal(context, agent);
     }
   );
 
-  // Command: Always open a new OpenCode terminal tab
-  const openNewTerminalCmd = vscode.commands.registerCommand(
-    "opencode.openNewTerminal",
+  // Command: Always open a new terminal tab
+  const openNewCmd = vscode.commands.registerCommand(
+    `${agent.id}.openNewTerminal`,
     async () => {
-      await launchOpenCodeTerminal(context);
+      await launchTerminal(context, agent);
     }
   );
 
   // Command: Insert active editor path/selection reference into the terminal
   const addFilepathCmd = vscode.commands.registerCommand(
-    "opencode.addFilepathToTerminal",
+    `${agent.id}.addFilepathToTerminal`,
     async () => {
       const ref = getActiveEditorReference();
       if (!ref) {
         return;
       }
       const activeTerminal = vscode.window.activeTerminal;
-      if (activeTerminal && activeTerminal.name === TERMINAL_NAME) {
+      if (activeTerminal && activeTerminal.name === agent.terminalName) {
         activeTerminal.sendText(`${ref} `, false);
         activeTerminal.show();
       }
     }
   );
 
-  // Status Bar Item: Quick launch button on the status bar (bottom-right)
-  const statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-    100
-  );
-  statusBarItem.command = "opencode.openTerminal";
-  statusBarItem.text = "$(terminal) OpenCode";
-  statusBarItem.tooltip = "Open OpenCode Terminal (Ctrl+Escape)";
-  statusBarItem.show();
-
-  context.subscriptions.push(
-    openTerminalCmd,
-    openNewTerminalCmd,
-    addFilepathCmd,
-    statusBarItem
-  );
+  context.subscriptions.push(openCmd, openNewCmd, addFilepathCmd);
 }
 
-export function deactivate() {}
-
-async function launchOpenCodeTerminal(
-  context: vscode.ExtensionContext
+async function launchTerminal(
+  context: vscode.ExtensionContext,
+  agent: AgentTerminalConfig
 ): Promise<vscode.Terminal> {
-  const config = vscode.workspace.getConfiguration("opencode");
-  const command = config.get<string>("command", "opencode2") || "opencode2";
+  const config = vscode.workspace.getConfiguration(agent.configSection);
+  const command =
+    config.get<string>("command", agent.defaultCommand) || agent.defaultCommand;
   const locationSetting = config.get<string>("location", "editorBeside");
 
   let location:
@@ -85,18 +134,15 @@ async function launchOpenCodeTerminal(
     location = vscode.TerminalLocation.Panel;
   }
 
-  const iconDark = context.asAbsolutePath("images/button-dark.svg");
-  const iconLight = context.asAbsolutePath("images/button-light.svg");
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
   const terminal = vscode.window.createTerminal({
-    name: TERMINAL_NAME,
-    iconPath: {
-      light: vscode.Uri.file(iconLight),
-      dark: vscode.Uri.file(iconDark),
-    },
+    name: agent.terminalName,
+    iconPath: agent.iconPath,
     location,
+    cwd: workspaceFolder,
     env: {
-      OPENCODE_CALLER: "vscode",
+      [agent.callerEnvVar]: "vscode",
     },
   });
 
@@ -107,7 +153,8 @@ async function launchOpenCodeTerminal(
   const initialRef = getActiveEditorReference();
   if (initialRef) {
     setTimeout(() => {
-      terminal.sendText(`In ${initialRef} `, false);
+      const prefix = agent.id === "opencode" ? "In " : "";
+      terminal.sendText(`${prefix}${initialRef} `, false);
     }, 1200);
   }
 
