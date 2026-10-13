@@ -1,0 +1,110 @@
+{
+  "name": "opencode2-terminal",
+  "displayName": "OpenCode 2 Terminal",
+  "description": "Launch OpenCode 2 directly in an editor-area terminal tab with status bar quick launch",
+  "version": "0.1.0",
+  "publisher": "Areo-RGB",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Areo-RGB/vs_ext"
+  },
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "opencode.openTerminal",
+        "title": "Open OpenCode",
+        "category": "OpenCode",
+        "icon": {
+          "light": "images/button-dark.svg",
+          "dark": "images/button-light.svg"
+        }
+      },
+      {
+        "command": "opencode.openNewTerminal",
+        "title": "Open OpenCode in New Editor Tab",
+        "category": "OpenCode",
+        "icon": {
+          "light": "images/button-dark.svg",
+          "dark": "images/button-light.svg"
+        }
+      },
+      {
+        "command": "opencode.addFilepathToTerminal",
+        "title": "Insert File/Selection into Terminal",
+        "category": "OpenCode"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "opencode.openTerminal",
+        "key": "cmd+escape",
+        "mac": "cmd+escape",
+        "win": "ctrl+escape",
+        "linux": "ctrl+escape"
+      },
+      {
+        "command": "opencode.openNewTerminal",
+        "key": "cmd+shift+escape",
+        "mac": "cmd+shift+escape",
+        "win": "ctrl+shift+escape",
+        "linux": "ctrl+shift+escape"
+      },
+      {
+        "command": "opencode.addFilepathToTerminal",
+        "key": "cmd+alt+k",
+        "mac": "cmd+alt+k",
+        "win": "ctrl+alt+k",
+        "linux": "ctrl+alt+k"
+      }
+    ],
+    "configuration": {
+      "title": "OpenCode 2 Terminal",
+      "properties": {
+        "opencode.command": {
+          "type": "string",
+          "default": "opencode2",
+          "description": "Command to execute when launching OpenCode in the terminal (e.g. opencode2 or opencode)."
+        },
+        "opencode.location": {
+          "type": "string",
+          "enum": [
+            "editorBeside",
+            "editorActive",
+            "panel"
+          ],
+          "enumDescriptions": [
+            "Open terminal as a split editor beside the current active editor",
+            "Open terminal in the active editor group",
+            "Open terminal in the bottom panel"
+          ],
+          "default": "editorBeside",
+          "description": "Where to open the OpenCode terminal."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "bun run build:prod",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "build:prod": "node esbuild.js --production",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.19",
+    "@types/vscode": "^1.94.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.2"
+  }
+}
