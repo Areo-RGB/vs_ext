@@ -1,8 +1,8 @@
 {
   "name": "opencode2-terminal",
-  "displayName": "OpenCode & Pi-Bolt Terminal",
-  "description": "Launch OpenCode 2 and Pi-Bolt directly in editor-area terminal tabs with status bar quick launch buttons",
-  "version": "0.2.0",
+  "displayName": "OpenCode, Pi-Bolt & J-Code Terminal",
+  "description": "Launch OpenCode 2, Pi-Bolt, and J-Code directly in editor-area terminal tabs with status bar quick launch buttons",
+  "version": "0.3.0",
   "publisher": "Areo-RGB",
   "repository": {
     "type": "git",
@@ -61,6 +61,23 @@
         "command": "pibolt.addFilepathToTerminal",
         "title": "Insert File/Selection into Pi-Bolt Terminal",
         "category": "Pi-Bolt"
+      },
+      {
+        "command": "jcode.openTerminal",
+        "title": "Open J-Code",
+        "category": "J-Code",
+        "icon": "$(code)"
+      },
+      {
+        "command": "jcode.openNewTerminal",
+        "title": "Open J-Code in New Editor Tab",
+        "category": "J-Code",
+        "icon": "$(code)"
+      },
+      {
+        "command": "jcode.addFilepathToTerminal",
+        "title": "Insert File/Selection into J-Code Terminal",
+        "category": "J-Code"
       }
     ],
     "keybindings": [
@@ -98,10 +115,24 @@
         "mac": "cmd+shift+b",
         "win": "ctrl+shift+b",
         "linux": "ctrl+shift+b"
+      },
+      {
+        "command": "jcode.openTerminal",
+        "key": "cmd+alt+j",
+        "mac": "cmd+alt+j",
+        "win": "ctrl+alt+j",
+        "linux": "ctrl+alt+j"
+      },
+      {
+        "command": "jcode.openNewTerminal",
+        "key": "cmd+shift+j",
+        "mac": "cmd+shift+j",
+        "win": "ctrl+shift+j",
+        "linux": "ctrl+shift+j"
       }
     ],
     "configuration": {
-      "title": "OpenCode & Pi-Bolt Terminal",
+      "title": "OpenCode, Pi-Bolt & J-Code Terminal",
       "properties": {
         "opencode.command": {
           "type": "string",
@@ -142,6 +173,26 @@
           ],
           "default": "editorBeside",
           "description": "Where to open the Pi-Bolt terminal."
+        },
+        "jcode.command": {
+          "type": "string",
+          "default": "jcode",
+          "description": "Command to execute when launching J-Code in the terminal."
+        },
+        "jcode.location": {
+          "type": "string",
+          "enum": [
+            "editorBeside",
+            "editorActive",
+            "panel"
+          ],
+          "enumDescriptions": [
+            "Open terminal as a split editor beside the current active editor",
+            "Open terminal in the active editor group",
+            "Open terminal in the bottom panel"
+          ],
+          "default": "editorBeside",
+          "description": "Where to open the J-Code terminal."
         }
       }
     }

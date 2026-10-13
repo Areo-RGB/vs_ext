@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 const OPENCODE_TERMINAL_NAME = "opencode";
 const PI_BOLT_TERMINAL_NAME = "pi-bolt";
+const JCODE_TERMINAL_NAME = "jcode";
 
 interface AgentTerminalConfig {
   id: string;
@@ -34,9 +35,19 @@ export function activate(context: vscode.ExtensionContext) {
     callerEnvVar: "PI_BOLT_CALLER",
   };
 
-  // Register commands for OpenCode and Pi-Bolt
+  const jcodeAgent: AgentTerminalConfig = {
+    id: "jcode",
+    terminalName: JCODE_TERMINAL_NAME,
+    defaultCommand: "jcode",
+    configSection: "jcode",
+    iconPath: new vscode.ThemeIcon("code"),
+    callerEnvVar: "JCODE_CALLER",
+  };
+
+  // Register commands for OpenCode, Pi-Bolt, and J-Code
   registerAgentCommands(context, opencodeAgent);
   registerAgentCommands(context, piBoltAgent);
+  registerAgentCommands(context, jcodeAgent);
 
   // Status Bar Item: OpenCode quick launch (Right, priority 100)
   const openCodeStatusBarItem = vscode.window.createStatusBarItem(
@@ -58,7 +69,21 @@ export function activate(context: vscode.ExtensionContext) {
   piBoltStatusBarItem.tooltip = "Open Pi-Bolt Terminal (Ctrl+Alt+B)";
   piBoltStatusBarItem.show();
 
-  context.subscriptions.push(openCodeStatusBarItem, piBoltStatusBarItem);
+  // Status Bar Item: J-Code quick launch (Right, priority 98)
+  const jcodeStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    98
+  );
+  jcodeStatusBarItem.command = "jcode.openTerminal";
+  jcodeStatusBarItem.text = "$(code) J-Code";
+  jcodeStatusBarItem.tooltip = "Open J-Code Terminal (Ctrl+Alt+J)";
+  jcodeStatusBarItem.show();
+
+  context.subscriptions.push(
+    openCodeStatusBarItem,
+    piBoltStatusBarItem,
+    jcodeStatusBarItem
+  );
 }
 
 export function deactivate() {}
